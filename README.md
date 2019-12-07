@@ -28,6 +28,4 @@ Process:
 * Autos are assigned to a Road and given it's series of Lane points as well as the next connection and one of the paths through the connection and those points.   
 * The benefit of DOTS is speed, and it is terrific, so to avoid having to query the Road object when an Auto reaches the next point, a set of Road and Connection points is added to a car, when it reaches the end of these points the code, the Job iterates through the Road and Connection Entities to get the next set of points.   While this is a duplication of data, I was told by Unity that for DOTS duplicate data, in this instance, is prefered.   Source:  https://forum.unity.com/threads/speed-vs-redundant-data.776660/#post-5168798
 
-
-Each time an Auto has completed 
-
+Note: There is currently a hack in reference to the list of road and connection entities in the job.  In the "JobHandle OnUpdate" the code checks to see if the road list is at zero, if so creates the lists.   Creating these lists in the OnCreate causes an issue, sometimes, because the entities are not created in ER3D_Traffic before the Job starts.   Will need to find a solution to this, so at the moment this check works.  (hack!)
