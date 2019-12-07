@@ -8,3 +8,5 @@ This code is MOVEMENT process only.  There is no collision.
 
 Because string values at not blittable, see https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types for details, ERRoads and ERConnections need to have an idientity added to them.   So the first code is; ERRoadConnectionIdentity.cs   This is simply a holder for an INT value, which is added to all Roads and Connections at runtime.
 
+The next code objects are to deal with the fact that this code allows for Autos to be on multiple levels;  ERRoadLevelData is a scriptable object.   Each ER Road **HAS** to have ERRoadLevelDataHolder and an instance of the ERRoadLevelData.  This **HAS** to be done by you the developer.  So do this, I'll wait.   Really, got add this to all your roads now.
+
