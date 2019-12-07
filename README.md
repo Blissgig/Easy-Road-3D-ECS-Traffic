@@ -23,9 +23,19 @@ When ER3D_Traffic starts:
 1) Adds "ERRoadConnectionIdentity" to each Road and Connection and updates it's Identity value.  See function; "AddIndentityMono"
 2) Converts the Auto game objects to a new list of Entities.   This saves a ton of time of converting each Auto during the process of adding the Autos to the scene.  See function:  "CreateAutoEntities"
 3) Creates the ER Road and Connection entities.   Each Road or Connection has a collection of Lanes, each lane has collection of Points.   Connections have an Entry Lane and Exit Lane, as well as an Entry Road and Exit Road.   So entities are created for all instances of these options.   These are used in ER3D_TrafficSystem.
+4) TODO: Remove ERRoadConnectionIdentity from roads and connections after the entities have been created.  No need for them.   I have not do so yet as I have additional tests to run.
 
 Process:
 * Autos are assigned to a Road and given it's series of Lane points as well as the next connection and one of the paths through the connection and those points.   
 * The benefit of DOTS is speed, and it is terrific, so to avoid having to query the Road object when an Auto reaches the next point, a set of Road and Connection points is added to a car, when it reaches the end of these points the code, the Job iterates through the Road and Connection Entities to get the next set of points.   While this is a duplication of data, I was told by Unity that for DOTS duplicate data, in this instance, is prefered.   Source:  https://forum.unity.com/threads/speed-vs-redundant-data.776660/#post-5168798
 
 Note: There is currently a hack in reference to the list of road and connection entities in the job.  In the "JobHandle OnUpdate" the code checks to see if the road list is at zero, if so creates the lists.   Creating these lists in the OnCreate causes an issue, sometimes, because the entities are not created in ER3D_Traffic before the Job starts.   Will need to find a solution to this, so at the moment this check works.  (hack!)
+
+
+First off I want to thank Raoul from http://www.unityterraintools.com/   His asset, Easy Roads 3D is very good, however it is his support of this product that impresses me so much.  Bravo Raoul!
+
+Second is that  Unity's DOTS technology is still in beta, as is the Lane data in ER3D, so this code works as of today; Dec 7th 2019.   
+
+Third, this release is to help enlighten others to the power of DOTS, but beware it took a lot of hours to get this information and the code working.  So if you find a problem with this code, or with DOTS in general, give yourself some time and some patience.   It's a great technology and it's brand new.   I absolutely hear your frustration, but this is going to be SUCH a help for VR development.
+
+If you have any comments or improvements, please let me know.
