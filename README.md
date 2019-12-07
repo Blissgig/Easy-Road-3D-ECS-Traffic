@@ -10,3 +10,24 @@ Because string values at not blittable, see https://docs.microsoft.com/en-us/dot
 
 The next code objects are to deal with the fact that this code allows for Autos to be on multiple levels;  ERRoadLevelData is a scriptable object.   Each ER Road **HAS** to have ERRoadLevelDataHolder and an instance of the ERRoadLevelData.  This **HAS** to be done by you the developer.  So do this, I'll wait.   Really, got add this to all your roads now.
 
+The two main code files are: ER3D_Traffic.cs and ER3D_TrafficSystem.cs   ER3D_Traffic needs to be added to a game object as this code creates the Auto, Road and Connection entities.
+
+ER3D_Traffic has a few options:
+* "autos" - This is a list of GameObjects that will be converted to Entities
+* "speedMinimum"
+* "speedMaximum" - These are used to randomly set the speed to each Auto.
+* "vehicleLength" - This is used when setting the initial placement of the autos on the road to insure that they are not too far into the next Road/Connection.
+* "percentageLanesPopulated" - This value determines if an Auto is placed on a road lane.  If set to 100, then each road, each lane, each level will get an Auto when the scene starts.
+
+When ER3D_Traffic starts:
+1) Adds "ERRoadConnectionIdentity" to each Road and Connection and updates it's Identity value.  See function; "AddIndentityMono"
+2) Converts the Auto game objects to a new list of Entities.   This saves a ton of time of converting each Auto during the process of adding the Autos to the scene.  See function:  "CreateAutoEntities"
+3) Creates the ER Road and Connection entities.   Each Road or Connection has a collection of Lanes, each lane has collection of Points.   Connections have an Entry Lane and Exit Lane, as well as an Entry Road and Exit Road.   So entities are created for all instances of these options.   These are used in ER3D_TrafficSystem.
+
+Process:
+* Autos are assigned to a Road and given it's series of Lane points as well as the next connection and one of the paths through the connection and those points.   
+* The benefit of DOTS is speed, and it is terrific, so to avoid having to query the Road object when an Auto reaches the next point, a set of Road and Connection points is added to a car, when it reaches the end of these points the code, the Job iterates through the Road and Connection Entities to get the next set of points.   While this is a duplication of data, I was told by Unity that for DOTS duplicate data, in this instance, is prefered.   Source:  https://forum.unity.com/threads/speed-vs-redundant-data.776660/#post-5168798
+
+
+Each time an Auto has completed 
+
