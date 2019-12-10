@@ -33,6 +33,7 @@ Process:
 
 Note: There is currently a hack in reference to the list of road and connection entities in the job.  In the "JobHandle OnUpdate" the code checks to see if the road list is at zero, if so creates the lists.   Creating these lists in the OnCreate causes an issue, sometimes, because the entities are not created in ER3D_Traffic before the Job starts.   Will need to find a solution to this, so at the moment this check works.  (hack!)
 
+Note: There is a known bug in which if a connection does not have roads attached, or if a road does not have a connection at both ends there will be an issue.
 
 First off I want to thank Raoul from http://www.unityterraintools.com/   His asset, Easy Roads 3D is very good, however it is his support of this product that impresses me so much.  Bravo Raoul!
 
