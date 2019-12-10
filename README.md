@@ -35,6 +35,8 @@ Note: There is currently a hack in reference to the list of road and connection 
 
 Note: There is a known bug in which if a connection does not have roads attached, or if a road does not have a connection at both ends there will be an issue.
 
+Note: Make sure to check off "Enable GPU Instancing" on each Material you are using.  This affects performance.
+
 First off I want to thank Raoul from http://www.unityterraintools.com/   His asset, Easy Roads 3D is very good, however it is his support of this product that impresses me so much.  Bravo Raoul!
 
 Second is that  Unity's DOTS technology is still in beta, as is the Lane data in ER3D, so this code works as of today; Dec 7th 2019.   
