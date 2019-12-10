@@ -278,7 +278,7 @@ public class ER3D_Traffic : MonoBehaviour
         var entity = entityManager.Instantiate(prefab);
        
         float speed = UnityEngine.Random.Range(speedMinimum, speedMaximum);
-        float yOffset = roadLevelData.startHeight + ((level + 1) * roadLevelData.levelHeight);
+        float yOffset = roadLevelData.startHeight + (level * roadLevelData.levelHeight);
         int currentIndex = UnityEngine.Random.Range(0, lanePoints.Count - vehicleLength);
 
         Vector3 translation = lanePoints[currentIndex];
