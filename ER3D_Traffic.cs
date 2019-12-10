@@ -288,7 +288,11 @@ public class ER3D_Traffic : MonoBehaviour
         destination.y += yOffset;
 
         float3 lookVector = destination - translation;
-        Quaternion rotation = Quaternion.LookRotation(lookVector);
+        Quaternion rotation = new Quaternion();
+        if (!lookVector.Equals(float3.zero))
+        {
+            rotation = Quaternion.LookRotation(lookVector);
+        }
 
         entityManager.SetComponentData(entity, 
             new AutoDetails {
