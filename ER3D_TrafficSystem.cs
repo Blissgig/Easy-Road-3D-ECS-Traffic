@@ -1,4 +1,4 @@
-﻿using Unity.Burst;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -8,23 +8,22 @@ using UnityEngine;
 
 public class ER3D_TrafficSystem : JobComponentSystem
 {
-    //protected override void OnCreate()
-    //{
-    //    EntityQuery allRoadsQuery = GetEntityQuery(
-    //        typeof(ERRoadTag),
-    //        ComponentType.ReadOnly<RoadLaneIdentityComponent>(),
-    //        ComponentType.ReadOnly<IsLaneDirectionLeftComponent>(),
-    //        ComponentType.ReadOnly<LanePointsComponent>());
+    protected override void OnStartRunning()
+    {
+        EntityQuery allRoadsQuery = GetEntityQuery(
+            typeof(ERRoadTag),
+            ComponentType.ReadOnly<RoadDetails>(),
+            ComponentType.ReadOnly<LanePoints>());
 
-    //    roadEntities = allRoadsQuery.ToEntityArray(Allocator.Persistent);
+        roadEntities = allRoadsQuery.ToEntityArray(Allocator.Persistent);
 
-    //    EntityQuery allConnectionsQuery = GetEntityQuery(
-    //        typeof(ERConnectionTag),
-    //        ComponentType.ReadOnly<ConnectionDetails>(),
-    //        ComponentType.ReadOnly<LanePointsComponent>());
+        EntityQuery allConnectionsQuery = GetEntityQuery(
+            typeof(ERConnectionTag),
+            ComponentType.ReadOnly<ConnectionDetails>(),
+            ComponentType.ReadOnly<LanePoints>());
 
-    //    //connectionEntities = allConnectionsQuery.ToEntityArray(Allocator.Persistent);
-    //}
+        connectionEntities = allConnectionsQuery.ToEntityArray(Allocator.Persistent);
+    }
 
     [BurstCompile]
     [RequireComponentTag(typeof(ERAutoTag))]
@@ -52,7 +51,7 @@ public class ER3D_TrafficSystem : JobComponentSystem
 
         public float deltaTime;
         public float reachedPositionDistance;
-
+        public uint randomSeed;
 
         public void Execute(
             DynamicBuffer<AutoLanePoints> autoLanePoints, 
@@ -66,7 +65,8 @@ public class ER3D_TrafficSystem : JobComponentSystem
                 /* This is a basic check, 
                  * there seems to be a few instances 
                  * where the auto does not have points, 
-                 */ 
+                 */
+                Debug.Log("no lanes");
                 return; 
             }
 
@@ -133,8 +133,8 @@ public class ER3D_TrafficSystem : JobComponentSystem
                         }
                     }
                     
-                    uint seed = 88;
-                    Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(seed);
+                    //uint seed = 88;
+                    Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(randomSeed);
                     int randomValue = mathRandom.NextInt(0, availableConnections.Length);
                     var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
                     var connectionLanePointsBuffer = LanePointsFromEntity[availableConnections[randomValue]];
@@ -176,27 +176,12 @@ public class ER3D_TrafficSystem : JobComponentSystem
     
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        //This is done here beacuse
-        // A) Only want to run the query once, these values are created and NEVER modified at run-time
-        // B) The data may not be available OnCreate.  TODO: attempt to place this there.
-        if (roadEntities.Length == 0)
+        uint randomSeed = (uint)System.DateTime.Now.Millisecond;
+
+        if (randomSeed == 0)
         {
-            EntityQuery allRoadsQuery = GetEntityQuery(
-                typeof(ERRoadTag),
-                ComponentType.ReadOnly<RoadDetails>(),
-                ComponentType.ReadOnly<LanePoints>());
-
-            roadEntities = allRoadsQuery.ToEntityArray(Allocator.Persistent);
-
-            EntityQuery allConnectionsQuery = GetEntityQuery(
-                typeof(ERConnectionTag),
-                ComponentType.ReadOnly<ConnectionDetails>(),
-                ComponentType.ReadOnly<LanePoints>());
-
-            //TODO: this SEEMS to be causing a memory leak, as reported by Unity.
-            connectionEntities = allConnectionsQuery.ToEntityArray(Allocator.Persistent);
+            randomSeed = 88;
         }
-
 
         AutoNavigationJob autoNaviationJob = new AutoNavigationJob
         {
@@ -206,6 +191,7 @@ public class ER3D_TrafficSystem : JobComponentSystem
             roadEntities = roadEntities,
             connectionEntities = connectionEntities,
             deltaTime = Time.deltaTime,
+            randomSeed = randomSeed,
             reachedPositionDistance = REACHED_POSITION_DISTANCE
         };
 
