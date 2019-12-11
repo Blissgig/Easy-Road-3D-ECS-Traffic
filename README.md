@@ -1,11 +1,8 @@
-Dec 11, 2019: There is an issue where the Autos are generated but not visible in the scene.    Looking into this issue now.
-
---------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
 
 Thankfully, Unity has been working on a new technology called DOTS.   This document will not talk in detail about DOTS, for a primer I would recommend starting here:  https://unity.com/dots
 
-I watched this video for the list of all the DOTS/ECS packages:  https://youtu.be/C56bbgtPr_w
+I watched this video for the list of all the DOTS/ECS packages:  https://youtu.be/C56bbgtPr_w   Make sure that "Hybrid Renderer" is also installed as without it the Auto entities will not be visible.
 
 DOTS allows for many more active objects within a scene, but getting it working can be a bit tricky.  You cannot access the Easy Roads 3D API in DOTS.   So I create a collection of entities; Roads, Connections and Autos.    With these groups I can iterate through the autos in a Job, if the Auto is at the end of it's current path (a series of points along a ERRoad and ERConnection) it then iterates through the Roads to find the next Road and next Connection.   This allows the traffic to be as random as possible.
 
