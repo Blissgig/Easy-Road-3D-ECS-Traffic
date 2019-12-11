@@ -1,10 +1,3 @@
-Dec 11, 2019
-IMPORTANT: 
-Currently there is a bug on line 159 of ER3D_Traffic.cs where the laneConnectors is coming back as null.  I am working with the developers of ER3D on this issue.
-
-------------------------------------
-
-
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
 
 Thankfully, Unity has been working on a new technology called DOTS.   This document will not talk in detail about DOTS, for a primer I would recommend starting here:  https://unity.com/dots
