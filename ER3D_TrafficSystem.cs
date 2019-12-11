@@ -66,7 +66,6 @@ public class ER3D_TrafficSystem : JobComponentSystem
                  * there seems to be a few instances 
                  * where the auto does not have points, 
                  */
-                Debug.Log("no lanes");
                 return; 
             }
 
