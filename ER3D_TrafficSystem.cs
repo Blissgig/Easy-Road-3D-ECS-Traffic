@@ -132,7 +132,6 @@ public class ER3D_TrafficSystem : JobComponentSystem
                         }
                     }
                     
-                    //uint seed = 88;
                     Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(randomSeed);
                     int randomValue = mathRandom.NextInt(0, availableConnections.Length);
                     var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
