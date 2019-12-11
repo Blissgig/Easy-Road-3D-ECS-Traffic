@@ -1,3 +1,6 @@
+Dec 11th, 2019.   There is an issue because I do not currently use ConnectionIndex in my model.  I am working this out now.   However I am going on holiday on the 13th.   Fingers crossed I will get it done before then.
+
+-------------------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
 
 Thankfully, Unity has been working on a new technology called DOTS.   This document will not talk in detail about DOTS, for a primer I would recommend starting here:  https://unity.com/dots
