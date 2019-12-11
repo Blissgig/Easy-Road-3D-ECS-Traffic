@@ -135,7 +135,7 @@ public class ER3D_TrafficSystem : JobComponentSystem
                     
                     uint seed = 88;
                     Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(seed);
-                    int randomValue = mathRandom.NextInt(0, availableConnections.Length - 1);
+                    int randomValue = mathRandom.NextInt(0, availableConnections.Length);
                     var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
                     var connectionLanePointsBuffer = LanePointsFromEntity[availableConnections[randomValue]];
                     var connectionLanePoints = connectionLanePointsBuffer.ToNativeArray(Allocator.Temp);
