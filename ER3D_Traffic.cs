@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using EasyRoads3Dv3;
 using Unity.Entities;
 using System.Collections.Generic;
@@ -33,6 +33,9 @@ public class ER3D_Traffic : MonoBehaviour
 
     private void Start()
     {
+        //Insure that the job doesn't run until after the Road, Connection and Auto entities have been created
+        World.Active.GetExistingSystem<ER3D_TrafficSystem>().Enabled = false;
+
         entityManager = World.Active.EntityManager;
 
         if (percentageLanesPopulated > 100)
@@ -41,13 +44,15 @@ public class ER3D_Traffic : MonoBehaviour
             percentageLanesPopulated = 100;  
         }
 
-        AddIndentityMono();
+        IndentityMonoAdd();
 
         CreateAutoEntities();
 
         CreateRoadEntities();
 
-        //TODO: remove mono identity after the road/connection entities have been created.
+        IdentityMonoRemove();
+
+        World.Active.GetExistingSystem<ER3D_TrafficSystem>().Enabled = true;
     }
 
     private void CreateAutoEntities()
@@ -157,7 +162,7 @@ public class ER3D_Traffic : MonoBehaviour
 
                 //Create this Road/Lane/Connection combo
                 ERLaneConnector[] laneConnectors = erConnectionEnd.GetLaneData(connectionIndex, erLaneData.laneIndex);
-
+             
                 for (int i = 0; i < laneConnectors.Length; i++)
                 {
                     var laneConnector = laneConnectors[i];
@@ -224,6 +229,8 @@ public class ER3D_Traffic : MonoBehaviour
 
         allLanePoints.Clear();
         connectionLanePoints.Clear();
+
+        
     }
 
     private void CreateConnectionEntity(
@@ -322,7 +329,7 @@ public class ER3D_Traffic : MonoBehaviour
         }
     }
 
-    private void AddIndentityMono()
+    private void IndentityMonoAdd()
     {
         /*
          * Set up a unique value for each Road and Connection.
@@ -349,6 +356,23 @@ public class ER3D_Traffic : MonoBehaviour
             connection.gameObject.AddComponent<ERRoadConnectionIdentity>();
             connection.gameObject.GetComponent<ERRoadConnectionIdentity>().value = identity;
             identity++;
+        }
+    }
+
+    private void IdentityMonoRemove()
+    {
+        ERRoadNetwork roadNetwork = new ERRoadNetwork();
+        ERRoad[] roads = roadNetwork.GetRoads();
+        ERConnection[] connections = roadNetwork.GetConnections();
+
+        foreach (ERRoad road in roads)
+        {
+            Destroy(road.gameObject.GetComponent<ERRoadConnectionIdentity>());
+        }
+
+        foreach (ERConnection connection in connections)
+        {
+            Destroy(connection.gameObject.GetComponent<ERRoadConnectionIdentity>());
         }
     }
 
