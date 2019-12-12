@@ -1,4 +1,4 @@
-Dec 11th, 2019.   There is an issue because I do not currently use ConnectionIndex in my model.  I am working this out now.   However I am going on holiday on the 13th.   Fingers crossed I will get it done before then.
+Dec 12th, 2019.   There is an issue because I do not currently use ConnectionIndex in my model.  However I am going on holiday tomorrow so this will have to wait.
 
 -------------------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
