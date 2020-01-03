@@ -1,4 +1,4 @@
-﻿using Unity.Entities;
+using Unity.Entities;
 using Unity.Mathematics;
 
 public struct ERConnectionTag : IComponentData { }
@@ -46,6 +46,8 @@ public struct ConnectionDetails : IComponentData
     public int LaneIndexEnd;
     public int RoadIdentityEnd;
     public int RoadIdentityStart;
+    public int ConnectionIndexEnd;
+    public int ConnectionIndexStart;
 }
 
 public struct RoadDetails : IComponentData
@@ -65,4 +67,3 @@ public struct LanePoints : IBufferElementData
 {
     public float3 value;
 }
-
