@@ -52,7 +52,7 @@ public class ER3D_TrafficSystem : JobComponentSystem
         public float deltaTime;
         public float reachedPositionDistance;
         public uint randomSeed;
-
+        
         public void Execute(
             DynamicBuffer<AutoLanePoints> autoLanePoints, 
             [ReadOnly] ref AutoDetails autoDetails, 
@@ -70,12 +70,11 @@ public class ER3D_TrafficSystem : JobComponentSystem
             }
 
             var distance = math.distance(autoPosition.Destination, autoTranslation.Value);
-            int connectionIdentityEnd = 0;
-
-            if (distance < reachedPositionDistance)
+            
+            if (distance <= reachedPositionDistance)
             {
                 autoPosition.CurrentPositionIndex += 1;
-
+                
                 //If the Auto's current position is at the end of it's list of 
                 //points, get the next list of points from the road or connection.
                 if (autoPosition.CurrentPositionIndex >= autoLanePoints.Length)
@@ -85,6 +84,7 @@ public class ER3D_TrafficSystem : JobComponentSystem
 
                     int laneIndex = 0;
                     int roadIdentity = 0;
+                    int connectionIdentityEnd = 0;
 
 
                     for (int i = 0; i < roadEntities.Length; i++)
@@ -93,13 +93,15 @@ public class ER3D_TrafficSystem : JobComponentSystem
 
                         if ((roadDetails.RoadIdentity == autoPosition.RoadIdentity) &&
                             (roadDetails.LaneIndex == autoPosition.LaneIndex) &&
-                            (roadDetails.ConnectionIdentityStart == autoPosition.ConnectionIdentity)
+                            (roadDetails.ConnectionIdentityStart == autoPosition.ConnectionIdentity) &&
+                            (roadDetails.ConnectionIndexStart == autoPosition.ConnectionIndex)
                             )
                         {
+                            //Set variables for use to get the next connection
                             laneIndex = roadDetails.LaneIndex;
                             roadIdentity = roadDetails.RoadIdentity;
                             connectionIdentityEnd = roadDetails.ConnectionIdentityEnd;
-
+                            
                             var roadLanePointsBuffer = LanePointsFromEntity[roadEntities[i]];
                             var roadLanePoints = roadLanePointsBuffer.ToNativeArray(Allocator.Temp);
                             var lanePointAuto = new AutoLanePoints();
@@ -113,7 +115,6 @@ public class ER3D_TrafficSystem : JobComponentSystem
                         }
                     }
 
-
                     //Get the Connection's Lane's points
                     //First find all options that have the same Idenity and Index.  
                     //Then we can randomly select one of the routes through the connection
@@ -124,14 +125,15 @@ public class ER3D_TrafficSystem : JobComponentSystem
                         var connectionDetails = ConnectionDetailsFromEntity[connectionEntities[i]];
 
                         if ((connectionDetails.ConnectionIdentity == connectionIdentityEnd) &&
+                            (connectionDetails.LaneIndexStart == laneIndex) &&
                             (connectionDetails.RoadIdentityStart == roadIdentity) && 
-                            (connectionDetails.LaneIndexStart == laneIndex)
+                            (connectionDetails.ConnectionIndexStart == autoPosition.ConnectionIndex)
                             ) 
                         {
                             availableConnections.Add(connectionEntities[i]);
                         }
                     }
-                    
+
                     Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(randomSeed);
                     int randomValue = mathRandom.NextInt(0, availableConnections.Length);
                     var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
@@ -144,9 +146,12 @@ public class ER3D_TrafficSystem : JobComponentSystem
                         lanePoint.value = connectionLanePoints[x].value;
                         autoLanePoints.Add(lanePoint);
                     }
+
+                    //Reset the Auto's variables for the next Road/Connection selection
                     autoPosition.LaneIndex = connectionDetailsNew.LaneIndexEnd;
                     autoPosition.RoadIdentity = connectionDetailsNew.RoadIdentityEnd;
                     autoPosition.ConnectionIdentity = connectionDetailsNew.ConnectionIdentity;
+                    autoPosition.ConnectionIndex = connectionDetailsNew.ConnectionIndexEnd; 
 
                     availableConnections.Dispose();
                 }
@@ -174,12 +179,8 @@ public class ER3D_TrafficSystem : JobComponentSystem
     
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        uint randomSeed = (uint)System.DateTime.Now.Millisecond;
-
-        if (randomSeed == 0)
-        {
-            randomSeed = 88;
-        }
+        System.Random random = new System.Random();
+        uint randomSeed = (uint)random.Next(88, 1000000);
 
         AutoNavigationJob autoNaviationJob = new AutoNavigationJob
         {
