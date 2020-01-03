@@ -95,7 +95,8 @@ public class ER3D_Traffic : MonoBehaviour
 
         int nextRoadIdentity = 0;
         int nextLaneIndex = 0;
-        int connectionIndex;
+        int connectionIndexEnd;
+        int connectionIndexStart;
         int connectionIdentityEnd = 0;
         int connectionIdentityStart = 0;
         ERConnection erConnectionEnd;
@@ -122,21 +123,22 @@ public class ER3D_Traffic : MonoBehaviour
             {
                 ERLaneData erLaneData = road.GetLaneData(lane);
                 Vector3[] roadLanePoints = erLaneData.points;
+                
 
                 if (erLaneData.direction == ERLaneDirection.Right)
                 {
-                    erConnectionEnd = road.GetConnectionAtEnd(out connectionIndex);
-                    erConnectionStart = road.GetConnectionAtStart(out connectionIdentityStart);
+                    erConnectionEnd = road.GetConnectionAtEnd(out connectionIndexEnd);
+                    erConnectionStart = road.GetConnectionAtStart(out connectionIndexStart);
                 }
                 else
                 {
-                    erConnectionEnd = road.GetConnectionAtStart(out connectionIndex);
-                    erConnectionStart = road.GetConnectionAtEnd(out connectionIdentityStart);                    
+                    erConnectionEnd = road.GetConnectionAtStart(out connectionIndexEnd);
+                    erConnectionStart = road.GetConnectionAtEnd(out connectionIndexStart);                    
                 }
 
                 connectionIdentityStart = RoadConnectionIdentity(erConnectionStart.gameObject);
                 connectionIdentityEnd = RoadConnectionIdentity(erConnectionEnd.gameObject);
-
+   
                 //Create the Road/Lane entity
                 Entity roadEntity = entityManager.CreateEntity(roadEntityArchetype);
                 entityManager.SetComponentData(
@@ -146,7 +148,9 @@ public class ER3D_Traffic : MonoBehaviour
                         RoadIdentity = roadIdentity,
                         LaneIndex = erLaneData.laneIndex,
                         ConnectionIdentityEnd = connectionIdentityEnd,
-                        ConnectionIdentityStart = connectionIdentityStart
+                        ConnectionIdentityStart = connectionIdentityStart,
+                        ConnectionIndexEnd = connectionIndexEnd,
+                        ConnectionIndexStart = connectionIndexStart
                     });
 
                 //Get and store the road's lane points
@@ -161,12 +165,12 @@ public class ER3D_Traffic : MonoBehaviour
                 //---------------------------------------------------
 
                 //Create this Road/Lane/Connection combo
-                ERLaneConnector[] laneConnectors = erConnectionEnd.GetLaneData(connectionIndex, erLaneData.laneIndex);
+                ERLaneConnector[] laneConnectors = erConnectionEnd.GetLaneData(connectionIndexEnd, erLaneData.laneIndex);
              
                 for (int i = 0; i < laneConnectors.Length; i++)
                 {
                     var laneConnector = laneConnectors[i];
-
+                    
                     var endRoad = erConnectionEnd.GetConnectedRoad(laneConnector.endConnectionIndex, out connectedTo);
                     var roadIdentityEnd = RoadConnectionIdentity(endRoad.gameObject);
 
@@ -180,6 +184,8 @@ public class ER3D_Traffic : MonoBehaviour
                             LaneIndexEnd = laneConnector.endLaneIndex,
                             RoadIdentityStart = roadIdentity,
                             RoadIdentityEnd = roadIdentityEnd,
+                            ConnectionIndexEnd = laneConnector.endConnectionIndex, 
+                            ConnectionIndexStart = connectionIndexStart
                         });
 
                     var connectionLanePointsBuffer = entityManager.GetBuffer<LanePoints>(connectionEntity);
@@ -200,6 +206,8 @@ public class ER3D_Traffic : MonoBehaviour
 
                 nextLaneIndex = laneConnect.endLaneIndex;
                 nextRoadIdentity = RoadConnectionIdentity(exitRoad.gameObject);
+                connectionIndexEnd = laneConnect.endConnectionIndex;
+
                 connectionLanePoints = laneConnect.points.ToList();
 
                 allLanePoints.Clear();
@@ -221,6 +229,7 @@ public class ER3D_Traffic : MonoBehaviour
                             nextLaneIndex,
                             nextRoadIdentity,
                             connectionIdentityEnd,
+                            connectionIndexEnd,
                             roadLevelData);
                     }
                 }
@@ -229,8 +238,6 @@ public class ER3D_Traffic : MonoBehaviour
 
         allLanePoints.Clear();
         connectionLanePoints.Clear();
-
-        
     }
 
     private void CreateConnectionEntity(
@@ -279,9 +286,10 @@ public class ER3D_Traffic : MonoBehaviour
         int nextLaneIdentity,
         int nextRoadIdentity,
         int nextConnectionIdentity,
+        int connectionIndex,
         ERRoadLevelData roadLevelData)
     {
-        Entity prefab = autoEntities[UnityEngine.Random.Range(0, autoEntities.Count - 1)];
+        Entity prefab = autoEntities[UnityEngine.Random.Range(0, autoEntities.Count)];
         var entity = entityManager.Instantiate(prefab);
        
         float speed = UnityEngine.Random.Range(speedMinimum, speedMaximum);
@@ -313,7 +321,8 @@ public class ER3D_Traffic : MonoBehaviour
             Destination = destination,
             LaneIndex = nextLaneIdentity,
             RoadIdentity = nextRoadIdentity,
-            ConnectionIdentity = nextConnectionIdentity
+            ConnectionIdentity = nextConnectionIdentity,
+            ConnectionIndex = connectionIndex
             });
 
         entityManager.SetComponentData(entity, new Translation { Value = translation });
