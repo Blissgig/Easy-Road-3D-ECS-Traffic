@@ -3,7 +3,7 @@ Jan 7rd, 2020.   Removed a couple of components that are unnecessary for this ex
 ------------------------------
 I now have a testbed available: http://blissgig.com/downloads/ER3D_DOTS_Traffic.zip
 
-You will need to download and import the Easy Roads 3D from the Unity Store right after you open this project.  You will also need the current version of Easy Roads 3D:  https://easyroads3d.com/v3alpha.php
+You will need to download and import the Easy Roads 3D from the Unity Store right after you open this project.  You will also need the current alpha version of Easy Roads 3D:  https://easyroads3d.com/v3alpha.php  It contains the code that has lane data.
 
 ------------------------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
@@ -68,6 +68,7 @@ Notes:
 * There is currently a hack in reference to the list of road and connection entities in the job.  In the "JobHandle OnUpdate" the code checks to see if the road list is at zero, if so creates the lists.   Creating these lists in the OnCreate causes an issue, sometimes, because the entities are not created in ER3D_Traffic before the Job starts.   Will need to find a solution to this, so at the moment this check works.  (hack!)
 * There is a known bug in which if a connection does not have roads attached, or if a road does not have a connection at both ends there will be an issue.
 * Make sure to check off "Enable GPU Instancing" on each Material you are using.  This affects performance.
+* Easy Roads 3D on the Unity forum:  https://forum.unity.com/threads/easyroads3d-v3-the-upcoming-new-road-system.229327/
 
 ------------------------------
 Additional Info:
