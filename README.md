@@ -1,4 +1,9 @@
-Jan 3rd, 2020.   I have resolved the issues, mostly the lack of using the ConnectionIndex caused the wrong road/connection to be selected.  Oops.    
+Jan 7rd, 2020.   Removed a couple of components that are unnecessary for this example.  A testbed is also now available for download
+
+------------------------------
+I now have a testbed available: http://blissgig.com/downloads/ER3D_DOTS_Traffic.zip
+
+You will need to download and import the Easy Roads 3D from the Unity Store right after you open this project.
 
 ------------------------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
@@ -13,8 +18,6 @@ This code is MOVEMENT process only.  There is no collision.
 
 Because string values at not blittable, see https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types for details, ERRoads and ERConnections need to have an idientity added to them.   So the first code is; ERRoadConnectionIdentity.cs   This is simply a holder for an INT value, which is added to all Roads and Connections at runtime.
 
-The next code objects are to deal with the fact that this code allows for Autos to be on multiple levels;  ERRoadLevelData is a scriptable object.   Each ER Road **HAS** to have ERRoadLevelDataHolder and an instance of the ERRoadLevelData.  This **HAS** to be done by you the developer.  So do this, I'll wait.   Really, got add this to all your roads now.
-
 The two main code files are: ER3D_Traffic.cs and ER3D_TrafficSystem.cs   ER3D_Traffic needs to be added to a game object as this code creates the Auto, Road and Connection entities.
 
 ER3D_Traffic has a few options:
@@ -23,6 +26,7 @@ ER3D_Traffic has a few options:
 * "speedMaximum" - These are used to randomly set the speed to each Auto.
 * "vehicleLength" - This is used when setting the initial placement of the autos on the road to insure that they are not too far into the next Road/Connection.
 * "percentageLanesPopulated" - This value determines if an Auto is placed on a road lane.  If set to 100, then each road, each lane, each level will get an Auto when the scene starts.
+* heightOffset - This is a value to set the auto above the roads
 
 When ER3D_Traffic starts:
 1) Adds "ERRoadConnectionIdentity" to each Road and Connection and updates it's Identity value.  See function; "AddIndentityMono"
