@@ -25,11 +25,14 @@ public class ER3D_Traffic : MonoBehaviour
     [SerializeField]
     private int percentageLanesPopulated = 100;
 
+    [SerializeField]
+    private float heightOffset = 0.4f;
+
 
     private EntityManager entityManager;
     private ConnectedTo connectedTo;
     private List<Entity> autoEntities = new List<Entity>();
-
+    
 
     private void Start()
     {
@@ -114,7 +117,6 @@ public class ER3D_Traffic : MonoBehaviour
         //will be used in the JOB to get the next load of data
         foreach (ERRoad road in roads)
         {
-            var roadLevelData = road.gameObject.GetComponent<ERRoadLevelDataHolder>().levelData;
             int roadIdentity = road.gameObject.GetComponent<ERRoadConnectionIdentity>().value;
             int lanes = road.GetLaneCount();
             
@@ -215,23 +217,17 @@ public class ER3D_Traffic : MonoBehaviour
                 allLanePoints.AddRange(connectionLanePoints);
                 connectionLanePoints.Clear();
 
-                //Create a car for each level
-                for (int level = 0; level < roadLevelData.levelCount; level++)
-                {
-                    //Option to not fill every lane 
-                    int random = UnityEngine.Random.Range(0, 100);
+                //Option to not fill every lane 
+                int random = UnityEngine.Random.Range(0, 100);
 
-                    if (random <= percentageLanesPopulated)
-                    {
-                        CreateAutoEntity(
-                            allLanePoints,
-                            level,
-                            nextLaneIndex,
-                            nextRoadIdentity,
-                            connectionIdentityEnd,
-                            connectionIndexEnd,
-                            roadLevelData);
-                    }
+                if (random <= percentageLanesPopulated)
+                {
+                    CreateAutoEntity(
+                        allLanePoints,
+                        nextLaneIndex,
+                        nextRoadIdentity,
+                        connectionIdentityEnd,
+                        connectionIndexEnd);
                 }
             }
         }
@@ -282,25 +278,22 @@ public class ER3D_Traffic : MonoBehaviour
 
     private void CreateAutoEntity(
         List<Vector3> lanePoints,
-        int level,
         int nextLaneIdentity,
         int nextRoadIdentity,
         int nextConnectionIdentity,
-        int connectionIndex,
-        ERRoadLevelData roadLevelData)
+        int connectionIndex)
     {
         Entity prefab = autoEntities[UnityEngine.Random.Range(0, autoEntities.Count)];
         var entity = entityManager.Instantiate(prefab);
        
         float speed = UnityEngine.Random.Range(speedMinimum, speedMaximum);
-        float yOffset = roadLevelData.startHeight + (level * roadLevelData.levelHeight);
         int currentIndex = UnityEngine.Random.Range(0, lanePoints.Count - vehicleLength);
 
         Vector3 translation = lanePoints[currentIndex];
-        translation.y += yOffset;
+        translation.y += heightOffset;
 
         Vector3 destination = lanePoints[currentIndex + 1];
-        destination.y += yOffset;
+        destination.y += heightOffset;
 
         float3 lookVector = destination - translation;
         Quaternion rotation = new Quaternion();
@@ -311,7 +304,7 @@ public class ER3D_Traffic : MonoBehaviour
 
         entityManager.SetComponentData(entity, 
             new AutoDetails {
-            yOffset = yOffset,
+            yOffset = heightOffset,
             speed = speed });
 
         entityManager.SetComponentData(entity, 
