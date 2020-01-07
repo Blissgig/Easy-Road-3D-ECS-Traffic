@@ -3,7 +3,7 @@ Jan 7rd, 2020.   Removed a couple of components that are unnecessary for this ex
 ------------------------------
 I now have a testbed available: http://blissgig.com/downloads/ER3D_DOTS_Traffic.zip
 
-You will need to download and import the Easy Roads 3D from the Unity Store right after you open this project.
+You will need to download and import the Easy Roads 3D from the Unity Store right after you open this project.  You will also need the current version of Easy Roads 3D:  https://easyroads3d.com/v3alpha.php
 
 ------------------------------
 This code is designed for a hover car game I am creating.  Because I wanted to have autos at multiple heights ("Levels") and wanted the scene to feel filled with autos, not just one or two, hear and there.  I am also creating this game for VR, so frame rate is a REAL concern.
