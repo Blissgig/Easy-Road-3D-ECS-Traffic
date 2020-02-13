@@ -37,9 +37,9 @@ public class ER3D_Traffic : MonoBehaviour
     private void Start()
     {
         //Insure that the job doesn't run until after the Road, Connection and Auto entities have been created
-        World.Active.GetExistingSystem<ER3D_TrafficSystem>().Enabled = false;
+        World.DefaultGameObjectInjectionWorld.GetExistingSystem<ER3D_TrafficSystem>().Enabled = false;
 
-        entityManager = World.Active.EntityManager;
+        entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         if (percentageLanesPopulated > 100)
         {
@@ -55,7 +55,7 @@ public class ER3D_Traffic : MonoBehaviour
 
         IdentityMonoRemove();
 
-        World.Active.GetExistingSystem<ER3D_TrafficSystem>().Enabled = true;
+        World.DefaultGameObjectInjectionWorld.GetExistingSystem<ER3D_TrafficSystem>().Enabled = true;
     }
 
     private void CreateAutoEntities()
