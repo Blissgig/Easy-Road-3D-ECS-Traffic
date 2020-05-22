@@ -6,14 +6,18 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-public class ER3D_TrafficSystem : JobComponentSystem
+public class ER3D_TrafficSystem : SystemBase 
 {
+    private NativeArray<Entity> roadEntities;
+    private NativeArray<Entity> connectionEntities;
+    
     protected override void OnStartRunning()
     {
         EntityQuery allRoadsQuery = GetEntityQuery(
             typeof(ERRoadTag),
             ComponentType.ReadOnly<RoadDetails>(),
             ComponentType.ReadOnly<LanePoints>());
+
 
         roadEntities = allRoadsQuery.ToEntityArray(Allocator.Persistent);
 
@@ -26,178 +30,123 @@ public class ER3D_TrafficSystem : JobComponentSystem
     }
 
     [BurstCompile]
-    [RequireComponentTag(typeof(ERAutoTag))]
-    protected struct AutoNavigationJob : IJobForEach_BCCCC<
-        AutoLanePoints,
-        AutoDetails,
-        AutoPosition,
-        Translation,
-        Rotation>
+    protected override void OnUpdate()
     {
-        [ReadOnly]
-        public ComponentDataFromEntity<RoadDetails> RoadDetailsFromEntity;
+        System.Random random = new System.Random();
+        uint randomSeed = (uint)random.Next(88, 1000000);
+        float dt = Time.DeltaTime;
+        float reachedPositionDistance = 2.5f;
+        NativeArray<Entity> roads = roadEntities;
+        NativeArray<Entity> connections = connectionEntities;
+        ComponentDataFromEntity<RoadDetails> RoadDetailsFromEntity = GetComponentDataFromEntity<RoadDetails>(true);
+        ComponentDataFromEntity<ConnectionDetails> ConnectionDetailsFromEntity = GetComponentDataFromEntity<ConnectionDetails>(true);
+        BufferFromEntity<LanePoints> LanePointsFromEntity = GetBufferFromEntity<LanePoints>(true);
 
-        [ReadOnly]
-        public ComponentDataFromEntity<ConnectionDetails> ConnectionDetailsFromEntity;
 
-        [ReadOnly]
-        public BufferFromEntity<LanePoints> LanePointsFromEntity;
-
-        [ReadOnly]
-        public NativeArray<Entity> roadEntities;
-
-        [ReadOnly]
-        public NativeArray<Entity> connectionEntities;
-
-        public float deltaTime;
-        public float reachedPositionDistance;
-        public uint randomSeed;
-        
-        public void Execute(
-            DynamicBuffer<AutoLanePoints> autoLanePoints, 
-            [ReadOnly] ref AutoDetails autoDetails, 
+        Entities.WithAll<ERAutoTag>()
+            .ForEach((
+            DynamicBuffer<AutoLanePoints> autoLanePoints,
+            ref AutoDetails autoDetails,
             ref AutoPosition autoPosition,
-            ref Translation autoTranslation, 
-            ref Rotation autoRotation)
-        {
-            if (autoLanePoints.Length == 0)
+            ref Translation translation,
+            ref Rotation rotation) =>
             {
-                /* This is a basic check, 
-                 * there seems to be a few instances 
-                 * where the auto does not have points, 
-                 */
-                return; 
-            }
+                var distance = math.distance(autoPosition.Destination, translation.Value);
 
-            var distance = math.distance(autoPosition.Destination, autoTranslation.Value);
-            
-            if (distance <= reachedPositionDistance)
-            {
-                autoPosition.CurrentPositionIndex += 1;
-                
-                //If the Auto's current position is at the end of it's list of 
-                //points, get the next list of points from the road or connection.
-                if (autoPosition.CurrentPositionIndex >= autoLanePoints.Length)
+                if (distance <= reachedPositionDistance)
                 {
-                    autoPosition.CurrentPositionIndex = 0;
-                    autoLanePoints.Clear();
+                    autoPosition.CurrentPositionIndex += 1;
 
-                    int laneIndex = 0;
-                    int roadIdentity = 0;
-                    int connectionIdentityEnd = 0;
-
-
-                    for (int i = 0; i < roadEntities.Length; i++)
+                    if (autoPosition.CurrentPositionIndex >= autoLanePoints.Length)
                     {
-                        RoadDetails roadDetails = RoadDetailsFromEntity[roadEntities[i]];
+                        autoPosition.CurrentPositionIndex = 0;
+                        autoLanePoints.Clear();
 
-                        if ((roadDetails.RoadIdentity == autoPosition.RoadIdentity) &&
+                        int laneIndex = 0;
+                        int roadIdentity = 0;
+                        int connectionIdentityEnd = 0;
+
+                        for (int i = 0; i < roads.Length; i++)
+                        {
+                            RoadDetails roadDetails = RoadDetailsFromEntity[roads[i]];
+
+                            if ((roadDetails.RoadIdentity == autoPosition.RoadIdentity) &&
                             (roadDetails.LaneIndex == autoPosition.LaneIndex) &&
                             (roadDetails.ConnectionIdentityStart == autoPosition.ConnectionIdentity) &&
                             (roadDetails.ConnectionIndexStart == autoPosition.ConnectionIndex)
                             )
-                        {
-                            //Set variables for use to get the next connection
-                            laneIndex = roadDetails.LaneIndex;
-                            roadIdentity = roadDetails.RoadIdentity;
-                            connectionIdentityEnd = roadDetails.ConnectionIdentityEnd;
-                            
-                            var roadLanePointsBuffer = LanePointsFromEntity[roadEntities[i]];
-                            var roadLanePoints = roadLanePointsBuffer.ToNativeArray(Allocator.Temp);
-                            var lanePointAuto = new AutoLanePoints();
-
-                            for (int x = 0; x < roadLanePoints.Length; x++)
                             {
-                                lanePointAuto.value = roadLanePoints[x].value;
-                                autoLanePoints.Add(lanePointAuto);
+                                laneIndex = roadDetails.LaneIndex;
+                                roadIdentity = roadDetails.RoadIdentity;
+                                connectionIdentityEnd = roadDetails.ConnectionIdentityEnd;
+
+                                var roadLanePointsBuffer = LanePointsFromEntity[roads[i]];
+                                var roadLanePoints = roadLanePointsBuffer.ToNativeArray(Allocator.Temp);
+                                var lanePointAuto = new AutoLanePoints();
+                                for (int pointIndex = 0; pointIndex < roadLanePoints.Length; pointIndex++)
+                                {
+                                    lanePointAuto.value = roadLanePoints[pointIndex].value;
+                                    autoLanePoints.Add(lanePointAuto);
+                                }
+                                break;
                             }
-                            break;
                         }
-                    }
 
-                    //Get the Connection's Lane's points
-                    //First find all options that have the same Idenity and Index.  
-                    //Then we can randomly select one of the routes through the connection
-                    NativeList<Entity> availableConnections = new NativeList<Entity>(Allocator.Temp);
+                        //Get the Connection's Lane's points
+                        //First find all options that have the same Idenity and Index.  
+                        //Then we can randomly select one of the routes through the connection
+                        NativeList<Entity> availableConnections = new NativeList<Entity>(Allocator.Temp);
 
-                    for (int i = 0; i < connectionEntities.Length; i++)
-                    {
-                        var connectionDetails = ConnectionDetailsFromEntity[connectionEntities[i]];
-
-                        if ((connectionDetails.ConnectionIdentity == connectionIdentityEnd) &&
-                            (connectionDetails.LaneIndexStart == laneIndex) &&
-                            (connectionDetails.RoadIdentityStart == roadIdentity) && 
-                            (connectionDetails.ConnectionIndexStart == autoPosition.ConnectionIndex)
-                            ) 
+                        for (int i = 0; i < connections.Length; i++)
                         {
-                            availableConnections.Add(connectionEntities[i]);
+                            var connectionDetails = ConnectionDetailsFromEntity[connections[i]];
+
+                            if ((connectionDetails.ConnectionIdentity == connectionIdentityEnd) &&
+                                (connectionDetails.LaneIndexStart == laneIndex) &&
+                                (connectionDetails.RoadIdentityStart == roadIdentity) &&
+                                (connectionDetails.ConnectionIndexStart == autoPosition.ConnectionIndex))
+                            {
+                                availableConnections.Add(connections[i]);
+                            }
                         }
+
+                        Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(randomSeed);
+                        int randomValue = mathRandom.NextInt(0, availableConnections.Length);
+                        var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
+                        var connectionLanePointsBuffer = LanePointsFromEntity[availableConnections[randomValue]];
+                        var connectionLanePoints = connectionLanePointsBuffer.ToNativeArray(Allocator.Temp);
+                        var lanePoint = new AutoLanePoints();
+
+                        for (int x = 0; x < connectionLanePoints.Length; x++)
+                        {
+                            lanePoint.value = connectionLanePoints[x].value;
+                            autoLanePoints.Add(lanePoint);
+                        }
+
+                        //Reset the Auto's variables for the next Road/Connection selection
+                        autoPosition.LaneIndex = connectionDetailsNew.LaneIndexEnd;
+                        autoPosition.RoadIdentity = connectionDetailsNew.RoadIdentityEnd;
+                        autoPosition.ConnectionIdentity = connectionDetailsNew.ConnectionIdentity;
+                        autoPosition.ConnectionIndex = connectionDetailsNew.ConnectionIndexEnd;
+
+                        availableConnections.Dispose();
                     }
 
-                    Unity.Mathematics.Random mathRandom = new Unity.Mathematics.Random(randomSeed);
-                    int randomValue = mathRandom.NextInt(0, availableConnections.Length);
-                    var connectionDetailsNew = ConnectionDetailsFromEntity[availableConnections[randomValue]];
-                    var connectionLanePointsBuffer = LanePointsFromEntity[availableConnections[randomValue]];
-                    var connectionLanePoints = connectionLanePointsBuffer.ToNativeArray(Allocator.Temp);
-                    var lanePoint = new AutoLanePoints();
-
-                    for (int x = 0; x < connectionLanePoints.Length; x++)
-                    {   
-                        lanePoint.value = connectionLanePoints[x].value;
-                        autoLanePoints.Add(lanePoint);
-                    }
-
-                    //Reset the Auto's variables for the next Road/Connection selection
-                    autoPosition.LaneIndex = connectionDetailsNew.LaneIndexEnd;
-                    autoPosition.RoadIdentity = connectionDetailsNew.RoadIdentityEnd;
-                    autoPosition.ConnectionIdentity = connectionDetailsNew.ConnectionIdentity;
-                    autoPosition.ConnectionIndex = connectionDetailsNew.ConnectionIndexEnd; 
-
-                    availableConnections.Dispose();
+                    autoPosition.Destination = autoLanePoints[autoPosition.CurrentPositionIndex].value;
+                    autoPosition.Destination.y += autoDetails.yOffset;
                 }
 
-                autoPosition.Destination = autoLanePoints[autoPosition.CurrentPositionIndex].value;
-                autoPosition.Destination.y += autoDetails.yOffset;
-            }
 
-            float3 lookVector = autoPosition.Destination - autoTranslation.Value;
+                float3 lookVector = autoPosition.Destination - translation.Value;
+                if (!lookVector.Equals(float3.zero))
+                {
+                    Quaternion rotationLookAt = Quaternion.LookRotation(lookVector);
+                    rotation.Value = rotationLookAt;
+                }
 
-            if (!lookVector.Equals(float3.zero))
-            {
-                Quaternion rotationLookAt = Quaternion.LookRotation(lookVector);
-                autoRotation.Value = rotationLookAt;
-            }
-            
-            float3 smoothedPosition = math.lerp(autoTranslation.Value, autoPosition.Destination, autoDetails.speed * deltaTime);
-            autoTranslation.Value = smoothedPosition;
-        }
-    }
+                float3 smoothedPosition = math.lerp(translation.Value, autoPosition.Destination, autoDetails.speed * dt);
+                translation.Value = smoothedPosition;
 
-    private const float REACHED_POSITION_DISTANCE = 1.0f;
-    private NativeArray<Entity> roadEntities;
-    private NativeArray<Entity> connectionEntities;
-    
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        System.Random random = new System.Random();
-        uint randomSeed = (uint)random.Next(88, 1000000);
-
-        AutoNavigationJob autoNaviationJob = new AutoNavigationJob
-        {
-            RoadDetailsFromEntity = GetComponentDataFromEntity<RoadDetails>(true),
-            ConnectionDetailsFromEntity = GetComponentDataFromEntity<ConnectionDetails>(true),
-            LanePointsFromEntity = GetBufferFromEntity<LanePoints>(true),
-            roadEntities = roadEntities,
-            connectionEntities = connectionEntities,
-            deltaTime = Time.deltaTime,
-            randomSeed = randomSeed,
-            reachedPositionDistance = REACHED_POSITION_DISTANCE
-        };
-
-        JobHandle jobHandle = autoNaviationJob.Schedule(this, inputDeps);
-
-        //JobHandle jobHandle = autoNaviationJob.Run(this, inputDeps);  //USED FOR DEBUGGING
-
-        return jobHandle;
+            }).Schedule();
     }
 }
