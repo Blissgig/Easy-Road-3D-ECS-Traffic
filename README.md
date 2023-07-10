@@ -1,3 +1,7 @@
+July 2023
+Oh goodness, this is still around?   I'm sorry, I completely forgot about it.   ECS is now 1.0 and I am working on a replacement for this code, so you know, don't use this, it's CRAP!
+
+----------------------------
 Jan 7rd, 2020.   Removed a couple of components that are unnecessary for this example.  A testbed is also now available for download
 
 ------------------------------
